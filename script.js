@@ -36,9 +36,13 @@ function onMouseClick(event) {
 		if(t.logicalOffset+dice <=31) {
 			t.logicalOffset+=dice;
 			drawGameState();
-			currentTurn = (currentTurn + 1)%4;
-			log(`It is now ${names[currentTurn]}'s turn. Roll the dice!`);
 			dice = null;
+			setTimeout(function() {
+				currentTurn = (currentTurn + 1)%4;
+				log(`It is now ${names[currentTurn]}'s turn. Roll the dice!`);
+				btnRollDice.disabled = false;
+				drawGameState();
+			}, 1500);
 		}
 	}
 }
@@ -140,6 +144,7 @@ function drawSmallCircle(x, y) {
 function rollDice() {
 	dice = Math.floor(6*Math.random()) + 1;
 	log("Dice roll: " + dice);
+	btnRollDice.disabled = true;
 }
 
 function init() {		
