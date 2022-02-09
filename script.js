@@ -55,7 +55,7 @@ function onMouseMove(event) {
 	drawGameState();
 	
 	var t = findToken(x, y);
-	if(t) {
+	if(t && t.playerId == currentTurn) {
 		if(t.logicalOffset+dice <=31) {
 			var preview = new Token(t.playerId, t.logicalOffset+dice);
 			preview.ghost = true;
