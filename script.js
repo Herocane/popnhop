@@ -7,6 +7,7 @@ const LARGE_CIRCLE_RADIUS = 500 - SMALL_CIRCLE_RADIUS;
 const CENTER_X = 512;
 const CENTER_Y = 512;
 const k = (LARGE_CIRCLE_RADIUS - 9*SMALL_CIRCLE_RADIUS)/5;
+const colors = [ "red", "green", "blue", "yellow" ];
 
 var circles = [];
 var tokens = [];
@@ -48,7 +49,7 @@ function onMouseMove(event) {
 	var t = findToken(x, y);
 	if(t) {
 		if(t.logicalOffset+dice <=31) {
-			var preview = new Token(t.color, t.logicalOffset+dice);
+			var preview = new Token(t.playerId, t.logicalOffset+dice);
 			preview.ghost = true;
 			preview.draw();
 		}
@@ -65,22 +66,9 @@ function findToken(x, y) {
 	}
 }
 
-function colorOffset(color) {
-	switch(color) {
-		case "red":
-			return 0;
-		case "green":
-			return 7;
-		case "blue":
-			return 14;
-		case "yellow":
-			return 21;
-	}
-}
-
 class Token {
-	constructor(color, logicalOffset){
-		this.color = color;
+	constructor(playerId, logicalOffset){
+		this.playerId = playerId;
 		this.logicalOffset = logicalOffset;
 		this.ghost = false;
 		if(!this.isValid()) { throw new Error("balls"); }
@@ -88,7 +76,7 @@ class Token {
 
 	physicalOffset() {
 		if(!this.isValid()) { throw new Error("balls"); }
-		return this.logicalOffset + colorOffset(this.color);
+		return this.logicalOffset + this.playerId*7;
 	}
 	
 	draw() {	
@@ -96,7 +84,7 @@ class Token {
 		context.beginPath();
 		context.arc(this.position().x, this.position().y, SMALL_CIRCLE_RADIUS, 0, 2*Math.PI);
 		context.closePath();
-		context.fillStyle = this.color;
+		context.fillStyle = colors[this.playerId];
 		if(this.ghost) {
 			context.globalAlpha = 0.2;
 		}
@@ -109,7 +97,7 @@ class Token {
 		if(this.logicalOffset < 28) {
 			return borderPosition(this.physicalOffset());
 		} else {
-			var angle = colorOffset(this.color)*Math.PI/14;
+			var angle = this.playerId*7*Math.PI/14;
 			var d = k + SMALL_CIRCLE_RADIUS + (31 - this.logicalOffset)*(k + 2*SMALL_CIRCLE_RADIUS);
 			var x = CENTER_X + d*Math.cos(angle);
 			var y = CENTER_Y + d*Math.sin(angle);
@@ -167,10 +155,10 @@ function init() {
 	}	
 	
 	tokens = [
-		new Token("red", 0),
-		new Token("yellow", 0),
-		new Token("green", 0),
-		new Token("blue", 0)
+		new Token(0, 0),
+		new Token(1, 0),
+		new Token(2, 0),
+		new Token(3, 0)
 	];
 }
 
