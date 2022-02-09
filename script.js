@@ -89,7 +89,7 @@ class Token {
 		context.arc(this.position().x, this.position().y, SMALL_CIRCLE_RADIUS, 0, 2*Math.PI);
 		context.closePath();
 		context.fillStyle = colors[this.playerId];
-		if(this.ghost) {
+		if(this.ghost || currentTurn != this.playerId) {
 			context.globalAlpha = 0.2;
 		}
 		context.fill();
