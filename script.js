@@ -9,10 +9,12 @@ const CENTER_Y = 512;
 const k = (LARGE_CIRCLE_RADIUS - 9*SMALL_CIRCLE_RADIUS)/5;
 const colors = [ "red", "green", "blue", "yellow" ];
 
+var names = [ "Red", "Green", "Blue", "Yellow" ];
 var circles = [];
 var tokens = [];
 
-var dice;
+var dice = null;
+var currentTurn = 0;
 
 addEventListener("click", onMouseClick);
 addEventListener("mousemove", onMouseMove);
@@ -25,22 +27,24 @@ function log(text) {
 }
 
 function onMouseClick(event) {
+	if(dice == null) return;
 	var x = event.x;
 	var y = event.y;
 	
 	var t = findToken(x, y);
-	if(t) {
+	if(t && t.playerId == currentTurn) {
 		if(t.logicalOffset+dice <=31) {
 			t.logicalOffset+=dice;
 			drawGameState();
-	
-			dice = Math.floor(6*Math.random()) + 1;
-			log("Dice roll: " + dice);
+			currentTurn = (currentTurn + 1)%4;
+			log(`It is now ${names[currentTurn]}'s turn. Roll the dice!`);
+			dice = null;
 		}
 	}
 }
 
 function onMouseMove(event) {
+	if(dice == null) return;
 	var x = event.x;
 	var y = event.y;
 	
@@ -160,6 +164,8 @@ function init() {
 		new Token(2, 0),
 		new Token(3, 0)
 	];
+
+	log(`${names[currentTurn]} goes first. Roll the dice!`);
 }
 
 function drawGameState() {
