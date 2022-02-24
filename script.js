@@ -191,7 +191,11 @@ async function nextTurn() {
 }
 
 function rollDice() {
-	dice = Math.floor(6*Math.random()) + 1;
+	handleDiceRoll(Math.floor(6*Math.random()) + 1);
+}
+
+function handleDiceRoll(roll) {
+	dice = roll;
 	log(`${names[currentTurn]} rolled a ${dice}.`);
 	btnRollDice.disabled = true;
 
@@ -275,6 +279,11 @@ function init() {
 	}
 
 	log(`${names[currentTurn]} goes first. Roll the dice!`);
+}
+
+function cheat(diceRoll) {
+	log(`${names[currentTurn]} casts a magic spell on the dice as it rolls!`);
+	handleDiceRoll(diceRoll);
 }
 
 function drawGameState() {
