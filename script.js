@@ -3,10 +3,13 @@ const btnRollDice = document.querySelector("#rolldice");
 const btnSpawn = document.querySelector("#spawn");
 const context = canvas.getContext("2d");
 
+canvas.width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+canvas.height = window.innerHeight|| document.documentElement.clientHeight|| document.body.clientHeight;
+
 const SMALL_CIRCLE_RADIUS = 35;
 const LARGE_CIRCLE_RADIUS = 500 - SMALL_CIRCLE_RADIUS;
-const CENTER_X = 512;
-const CENTER_Y = 512;
+const CENTER_X = width / 2;
+const CENTER_Y = height / 2;
 const CIRCLE_SPACING = (LARGE_CIRCLE_RADIUS - 9*SMALL_CIRCLE_RADIUS)/5;
 
 // Speed of token animation in spaces/s
@@ -348,7 +351,7 @@ function cheat(diceRoll) {
 }
 
 function drawGameState() {
-	context.clearRect(0, 0, 1024, 1024);
+	context.clearRect(0, 0, width, height);
 
 	for(var circle of circles) {
 		circle.draw();
