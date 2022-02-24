@@ -253,13 +253,24 @@ function performAction(action) {
 	}
 }
 
-// Check if there is already a token in the spawn location (logical offset 0) that is owned by the current player, if so a token cannot be spawned.
+// Check if there is already a token in the spawn location (logical offset 0) that is owned by the current player and if all the player's tokens are on the board already, if so a token cannot be spawned.
 function canSpawn() {
-	if(dice != 6) { return false; }
+	if(dice != 6 || tokenCount > 3) { return false; }
 	for(var token of tokens) {
 		if(token.playerId == currentTurn && token.logicalOffset == 0) { return false; }
 	}
 	return true;
+}
+
+// Count how many tokens the current player has on the board.
+function tokenCount() {
+	var tokenCount = 0;
+	for(var token of tokens) {
+		if(token.playerId == currentTurn) {
+			tokenCount++;
+		}
+	}
+	return tokenCount;
 }
 
 // Check if token t can move by the current dice roll.
@@ -293,6 +304,7 @@ function init() {
 }
 
 function endGame() {
+	drawGameState();
 	log(`${names[currentTurn]} just won the fuckin game, RESPECT!`);
 	dice = null;
 }
