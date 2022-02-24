@@ -9,6 +9,9 @@ const CENTER_X = 512;
 const CENTER_Y = 512;
 const CIRCLE_SPACING = (LARGE_CIRCLE_RADIUS - 9*SMALL_CIRCLE_RADIUS)/5;
 
+// Speed of token animation in spaces/s
+const TOKEN_SPEED = 6;
+
 // Indexed by the player ID
 const colors = [ "red", "green", "blue", "yellow" ];
 var names = [ "Red", "Green", "Blue", "Yellow" ];
@@ -39,7 +42,7 @@ function log(text) {
 	textbox.scrollTo(0, textbox.scrollHeight);
 }
 
-function onMouseClick(event) {
+async function onMouseClick(event) {
 	// Exit early if an action is not possible.
 	if(dice == null) return;
 	var x = event.x;
@@ -47,7 +50,7 @@ function onMouseClick(event) {
 
 	var t = findToken(x, y);
 	if(t && canMove(t)) {
-		performAction({type:"move", token:t});
+		await performAction({type:"move", token:t});
 	}
 }
 
@@ -109,17 +112,24 @@ class Token {
 
 	position() {
 		this.checkValidity();
-		if(this.logicalOffset < 28) {
+		if(this.logicalOffset <= 27) {
 			// This logical offset is on the outer ring.
 			return borderPosition(this.physicalOffset());
-		} else {
-			// This logical offset is on the final row.
-			var angle = this.playerId*7*Math.PI/14;
-			var d = CIRCLE_SPACING + SMALL_CIRCLE_RADIUS + (31 - this.logicalOffset)*(CIRCLE_SPACING + 2*SMALL_CIRCLE_RADIUS);
-			var x = CENTER_X + d*Math.cos(angle);
-			var y = CENTER_Y + d*Math.sin(angle);
+		} else if(this.logicalOffset <= 28) {
+			// Moving between outer ring and final row.
+			var startPos = borderPosition((27 + this.playerId*7)%28);
+			var endPos = finalRowPosition(this.playerId, 28);
+			var t = this.logicalOffset - 27;
+			var offsetX = endPos.x - startPos.x;
+			var offsetY = endPos.y - startPos.y;
+
+			var x = startPos.x + offsetX*t;
+			var y = startPos.y + offsetY*t;
 
 			return new Position(x, y);
+		} else {
+			// This logical offset is on the final row.
+			return finalRowPosition(this.playerId, this.logicalOffset);
 		}
 	}
 
@@ -154,6 +164,16 @@ function borderPosition(physicalOffset) {
 	var theta = Math.PI/28 + physicalOffset*Math.PI/14;
 	var x = CENTER_X + LARGE_CIRCLE_RADIUS*Math.cos(theta);
 	var y = CENTER_Y + LARGE_CIRCLE_RADIUS*Math.sin(theta);
+
+	return new Position(x, y);
+}
+
+function finalRowPosition(playerID, logicalOffset) {
+	// This logical offset is on the final row.
+	var angle = playerID*7*Math.PI/14;
+	var d = CIRCLE_SPACING + SMALL_CIRCLE_RADIUS + (31 - logicalOffset)*(CIRCLE_SPACING + 2*SMALL_CIRCLE_RADIUS);
+	var x = CENTER_X + d*Math.cos(angle);
+	var y = CENTER_Y + d*Math.sin(angle);
 
 	return new Position(x, y);
 }
@@ -213,7 +233,7 @@ function handleDiceRoll(roll) {
 	}
 }
 
-function performAction(action) {
+async function performAction(action) {
 	switch(action.type) {
 		case "spawn":
 			t = new Token(currentTurn, 0);
@@ -221,7 +241,7 @@ function performAction(action) {
 		break;
 		case "move":
 			t = action.token;
-			t.logicalOffset += dice;
+			await moveToken(t);
 		break;
 	}
 
@@ -301,6 +321,18 @@ function init() {
 	}
 
 	log(`${names[currentTurn]} goes first. Roll the dice!`);
+}
+
+async function moveToken(token) {
+	var endOffset = token.logicalOffset + dice;
+
+	while(token.logicalOffset < endOffset) {
+		token.logicalOffset += TOKEN_SPEED*0.01;
+		drawGameState();
+		await delay(10);
+	}
+
+	token.logicalOffset = endOffset;
 }
 
 function endGame() {
