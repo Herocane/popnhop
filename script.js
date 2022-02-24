@@ -7,15 +7,25 @@ const SMALL_CIRCLE_RADIUS = 35;
 const LARGE_CIRCLE_RADIUS = 500 - SMALL_CIRCLE_RADIUS;
 const CENTER_X = 512;
 const CENTER_Y = 512;
-const k = (LARGE_CIRCLE_RADIUS - 9*SMALL_CIRCLE_RADIUS)/5;
-const colors = [ "red", "green", "blue", "yellow" ];
+const CIRCLE_SPACING = (LARGE_CIRCLE_RADIUS - 9*SMALL_CIRCLE_RADIUS)/5;
 
+// Indexed by the player ID
+const colors = [ "red", "green", "blue", "yellow" ];
 var names = [ "Red", "Green", "Blue", "Yellow" ];
+
+// List of board spaces.
 var circles = [];
+
+// List of tokens currently in play.
 var tokens = [];
+
+// List of possible moves in current turn.
 var moves = [];
 
+// Dice roll, not null if action is possible.
 var dice = null;
+
+// Player ID of current player.
 var currentTurn = 0;
 
 addEventListener("click", onMouseClick);
@@ -30,6 +40,7 @@ function log(text) {
 }
 
 function onMouseClick(event) {
+	// Exit early if an action is not possible.
 	if(dice == null) return;
 	var x = event.x;
 	var y = event.y;
@@ -41,6 +52,7 @@ function onMouseClick(event) {
 }
 
 function onMouseMove(event) {
+	// Exit early if an action is not possible.
 	if(dice == null) return;
 	var x = event.x;
 	var y = event.y;
@@ -56,6 +68,7 @@ function onMouseMove(event) {
 }
 
 function findToken(x, y) {
+	// Tokens are drawn iterating forwards, which means last tokens are drawn on top, we iterate backwards here so that the token found is the one that is drawn on top.
 	for(var i = tokens.length - 1; i >= 0; i--) {
 		var p = tokens[i].position();
 		if((p.x-x)**2 + (p.y-y)**2 <= SMALL_CIRCLE_RADIUS**2) {
@@ -68,18 +81,21 @@ function findToken(x, y) {
 class Token {
 	constructor(playerId, logicalOffset){
 		this.playerId = playerId;
+		/* Physical offset is a location on the outer ring (between 0-27 and runs clockwise, starting at 3 o'clock 0_0).
+		   Logical offset describes the offset of the token relative to its spawn point.
+		   Logical offsets 28-31 describe the final 4 positions a token can be on (which aren't located on the outer ring) */
 		this.logicalOffset = logicalOffset;
 		this.ghost = false;
-		if(!this.isValid()) { throw new Error("balls"); }
+		this.checkValidity();
 	}
 
 	physicalOffset() {
-		if(!this.isValid()) { throw new Error("balls"); }
+		this.checkValidity();
 		return (this.logicalOffset + this.playerId*7)%28;
 	}
 
 	draw() {
-		if(!this.isValid()) { throw new Error("balls"); }
+		this.checkValidity();
 		context.beginPath();
 		context.arc(this.position().x, this.position().y, SMALL_CIRCLE_RADIUS, 0, 2*Math.PI);
 		context.closePath();
@@ -92,12 +108,14 @@ class Token {
 	}
 
 	position() {
-		if(!this.isValid()) { throw new Error("balls"); }
+		this.checkValidity();
 		if(this.logicalOffset < 28) {
+			// This logical offset is on the outer ring.
 			return borderPosition(this.physicalOffset());
 		} else {
+			// This logical offset is on the final row.
 			var angle = this.playerId*7*Math.PI/14;
-			var d = k + SMALL_CIRCLE_RADIUS + (31 - this.logicalOffset)*(k + 2*SMALL_CIRCLE_RADIUS);
+			var d = CIRCLE_SPACING + SMALL_CIRCLE_RADIUS + (31 - this.logicalOffset)*(CIRCLE_SPACING + 2*SMALL_CIRCLE_RADIUS);
 			var x = CENTER_X + d*Math.cos(angle);
 			var y = CENTER_Y + d*Math.sin(angle);
 
@@ -105,8 +123,10 @@ class Token {
 		}
 	}
 
-	isValid() {
-		return 0 <= this.logicalOffset && this.logicalOffset <= 31;
+	checkValidity() {
+		if(0 <= this.logicalOffset && this.logicalOffset <= 31) {
+			throw new Error(`Logical offset outside bounds (offset: ${this.logicalOffset})`);
+		}
 	}
 }
 
@@ -149,6 +169,7 @@ function delay(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// If there are no remaining actions possible, move onto the next player's turn. If last roll was a 6 current player gets another turn.
 async function nextTurn() {
 	var secondTurn = false;
 	if(dice == 6) { secondTurn = true; }
@@ -200,6 +221,7 @@ function performAction(action) {
 		break;
 	}
 
+	// Check if token has landed on another player's token, if so, remove that token from play.
 	if(t.logicalOffset < 28) {
 		for(var i = 0; i < tokens.length; i++) {
 			if(tokens[i] == t) { continue; }
@@ -216,6 +238,7 @@ function performAction(action) {
 	nextTurn();
 }
 
+// Check if there is already a token in the spawn location (logical offset 0) that is owned by the current player, if so a token cannot be spawned.
 function canSpawn() {
 	if(dice != 6) { return false; }
 	for(var token of tokens) {
@@ -224,6 +247,7 @@ function canSpawn() {
 	return true;
 }
 
+// Check if token t can move by the current dice roll.
 function canMove(t) {
 	if(t.playerId != currentTurn || t.logicalOffset + dice > 31) { return false; }
 	for(var token of tokens) {
@@ -233,14 +257,16 @@ function canMove(t) {
 }
 
 function init() {
+	// Add circles to the outer ring.
 	for(var i = 0; i < 28; i++) {
 		var p = borderPosition(i);
 
 		circles.push(new Circle(p));
 	}
 
+	// Add circles to the final rows.
 	for(i = 0; i < 4; i++) {
-		var d = k + SMALL_CIRCLE_RADIUS + i*(k + 2*SMALL_CIRCLE_RADIUS);
+		var d = CIRCLE_SPACING + SMALL_CIRCLE_RADIUS + i*(CIRCLE_SPACING + 2*SMALL_CIRCLE_RADIUS);
 
 		circles.push(new Circle(new Position(CENTER_X + d, CENTER_Y), colors[0]));
 		circles.push(new Circle(new Position(CENTER_X, CENTER_Y + d), colors[1]));
@@ -265,10 +291,4 @@ function drawGameState() {
 
 init();
 
-//setInterval(() => {
-	drawGameState();
-	/*redToken.logicalOffset = (redToken.logicalOffset+1)%32;
-	yellowToken.logicalOffset = (yellowToken.logicalOffset+1)%32;
-	greenToken.logicalOffset = (greenToken.logicalOffset+1)%32;
-	blueToken.logicalOffset = (blueToken.logicalOffset+1)%32;*/
-//}, 100);
+drawGameState();
