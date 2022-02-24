@@ -124,7 +124,7 @@ class Token {
 	}
 
 	checkValidity() {
-		if(0 <= this.logicalOffset && this.logicalOffset <= 31) {
+		if(0 > this.logicalOffset && this.logicalOffset > 31) {
 			throw new Error(`Logical offset outside bounds (offset: ${this.logicalOffset})`);
 		}
 	}
