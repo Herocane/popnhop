@@ -150,14 +150,21 @@ function delay(ms) {
 }
 
 async function nextTurn() {
+	var secondTurn = false;
+	if(dice == 6) { secondTurn = true; }
 	dice = null;
 	btnSpawn.disabled = true;
 	drawGameState();
 
-	//await delay(1500);
-
-	currentTurn = (currentTurn + 1)%4;
-	log(`It is now ${names[currentTurn]}'s turn. Roll the dice!`);
+	await delay(1500);
+	
+	if(!secondTurn) {
+		currentTurn = (currentTurn + 1)%4;
+		log(`It is now ${names[currentTurn]}'s turn. Roll the dice!`);
+	} else {
+		log(`${names[currentTurn]} rolled a 6! Roll again!`);
+	}
+	
 	btnRollDice.disabled = false;
 	drawGameState();
 }
@@ -205,7 +212,7 @@ function performAction(action) {
 			}
 		}
 	}
-
+	
 	nextTurn();
 }
 
