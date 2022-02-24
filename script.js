@@ -238,8 +238,19 @@ function performAction(action) {
 			}
 		}
 	}
-	
-	nextTurn();
+
+	var safeTokens = 0;
+	for(var token of tokens) {
+		if(token.playerId == currentTurn && token.logicalOffset > 27) {
+			safeTokens++;
+		}
+	}
+
+	if(safeTokens == 4) {
+		endGame();
+	} else {
+		nextTurn();
+	}
 }
 
 // Check if there is already a token in the spawn location (logical offset 0) that is owned by the current player, if so a token cannot be spawned.
@@ -279,6 +290,11 @@ function init() {
 	}
 
 	log(`${names[currentTurn]} goes first. Roll the dice!`);
+}
+
+function endGame() {
+	log(`${names[currentTurn]} just won the fuckin game, RESPECT!`);
+	dice = null;
 }
 
 function cheat(diceRoll) {
