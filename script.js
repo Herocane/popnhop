@@ -327,12 +327,13 @@ async function moveToken(token) {
 	var endOffset = token.logicalOffset + dice;
 
 	while(token.logicalOffset < endOffset) {
-		token.logicalOffset += TOKEN_SPEED*0.01;
 		drawGameState();
+		token.logicalOffset += TOKEN_SPEED*0.01;
 		await delay(10);
 	}
 
 	token.logicalOffset = endOffset;
+	drawGameState();
 }
 
 function endGame() {
