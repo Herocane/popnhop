@@ -8,8 +8,8 @@ canvas.height = window.innerHeight|| document.documentElement.clientHeight|| doc
 
 const SMALL_CIRCLE_RADIUS = 35;
 const LARGE_CIRCLE_RADIUS = 500 - SMALL_CIRCLE_RADIUS;
-const CENTER_X = width / 2;
-const CENTER_Y = height / 2;
+const CENTER_X = canvas.width / 2;
+const CENTER_Y = canvas.height / 2;
 const CIRCLE_SPACING = (LARGE_CIRCLE_RADIUS - 9*SMALL_CIRCLE_RADIUS)/5;
 
 // Speed of token animation in spaces/s
@@ -351,7 +351,7 @@ function cheat(diceRoll) {
 }
 
 function drawGameState() {
-	context.clearRect(0, 0, width, height);
+	context.clearRect(0, 0, canvas.width, canvas.height);
 
 	for(var circle of circles) {
 		circle.draw();
